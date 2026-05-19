@@ -1,6 +1,7 @@
 package roomescape.domain;
 
 import java.time.LocalTime;
+import java.util.Objects;
 import java.util.Optional;
 
 public class TimeSlot {
@@ -34,5 +35,18 @@ public class TimeSlot {
 
     public LocalTime getStartAt() {
         return startAt;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof TimeSlot timeSlot)) {
+            return false;
+        }
+        return Objects.equals(id, timeSlot.id) && Objects.equals(startAt, timeSlot.startAt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, startAt);
     }
 }

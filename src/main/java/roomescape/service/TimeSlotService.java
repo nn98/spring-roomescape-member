@@ -1,5 +1,8 @@
 package roomescape.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +14,6 @@ import roomescape.exception.TimeSlotNotFoundException;
 import roomescape.repository.ThemeRepository;
 import roomescape.repository.TimeSlotRepository;
 import roomescape.service.dto.AvailableTimeSlot;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,9 +55,12 @@ public class TimeSlotService {
 
     @Transactional
     public void putTime(long id, LocalTime startAt) {
-        findTimeSlotById(id);
-        checkDuplicatedStartAt(startAt);
-        timeSlotRepository.update(new TimeSlot(id, startAt));
+        TimeSlot exists = findTimeSlotById(id);
+        TimeSlot timeSlot = new TimeSlot(id, startAt);
+        if (!exists.equals(timeSlot)) {
+            checkDuplicatedStartAt(startAt);
+            timeSlotRepository.update(timeSlot);
+        }
     }
 
     @Transactional
