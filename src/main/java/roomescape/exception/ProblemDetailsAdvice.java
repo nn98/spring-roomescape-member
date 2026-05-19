@@ -1,6 +1,9 @@
 package roomescape.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,10 +16,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -46,8 +45,8 @@ public class ProblemDetailsAdvice {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ProblemDetail> handleIllegalArgumentException(IllegalArgumentException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleIllegalArgumentException(IllegalArgumentException exception) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
         problemDetail.setProperty("code", "INVALID_DOMAIN_STATE");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
@@ -60,36 +59,40 @@ public class ProblemDetailsAdvice {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ProblemDetail> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "데이터 무결성 제약조건이 위반되었습니다.");
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolationException(
+            DataIntegrityViolationException exception) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "데이터 무결성 제약조건이 위반되었습니다.");
         problemDetail.setProperty("code", "DATA_INTEGRITY_VIOLATION");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ProblemDetail> handleConstraintViolationException(ConstraintViolationException ex) {
+    public ResponseEntity<ProblemDetail> handleConstraintViolationException(ConstraintViolationException exception) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "파라미터 값이 유효하지 않습니다.");
         problemDetail.setProperty("code", "INVALID_PARAMETER");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ProblemDetail> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException exception) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "요청 값이 유효하지 않습니다.");
         problemDetail.setProperty("code", "INVALID_REQUEST_BODY");
-        problemDetail.setProperty("errors", extractErrors(ex));
+        problemDetail.setProperty("errors", extractErrors(exception));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(HttpMessageNotReadableException exception) {
+    public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException exception) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "요청 본문의 형식이 잘못되었습니다.");
         problemDetail.setProperty("code", "BAD_REQUEST_FORMAT");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
     }
 
-    private List<Map<String, String>> extractErrors(MethodArgumentNotValidException ex) {
-        return ex.getBindingResult().getFieldErrors().stream()
+    private List<Map<String, String>> extractErrors(MethodArgumentNotValidException exception) {
+        return exception.getBindingResult().getFieldErrors().stream()
                 .map(this::toErrorMap)
                 .toList();
     }
